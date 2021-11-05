@@ -42,8 +42,8 @@ public class SapperBoard extends JPanel implements ActionListener {
 
     private Image[] tiles;
 
-    private final String[] imagePathsBG = {"src/resources/TEmpty.png", "src/resources/TCovered.png", "src/resources/TFlag.png",
-            "src/resources/mine.png", "src/resources/mineExplode.png"};
+    private final String[] imagePathsBG = {"resources/TEmpty.png", "resources/TCovered.png", "resources/TFlag.png",
+            "resources/mine.png", "resources/mineExplode.png"};
 
     private final Color[] numberColors = {new Color(5, 6, 247),new Color(0, 134, 11),new Color(250, 0, 2),
                                             new Color(4, 5, 111), new Color(123, 4, 8),new Color(23, 101, 88),
@@ -93,7 +93,8 @@ public class SapperBoard extends JPanel implements ActionListener {
         tiles = new Image[5];
 
         int i = 0;
-        for(String patch : imagePathsBG) tiles[i++] = new ImageIcon(patch).getImage();
+        ClassLoader cl = this.getClass().getClassLoader();
+        for(String path : imagePathsBG) tiles[i++] = new ImageIcon(cl.getResource(path)).getImage();
     }
 
     private void initGame() {

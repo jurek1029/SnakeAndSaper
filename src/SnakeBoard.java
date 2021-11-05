@@ -74,12 +74,12 @@ public class SnakeBoard extends JPanel implements ActionListener {
 
     // need paths to be in order of: HeadUp,HeadDown,HeadLeft,HeadRight,TailUp,TailDown,TailLeft,TailRight,
     //                               BodyVertical,BodyHorizontal,BodyLeftToUp,BodyLeftToDown,BodyRightToUp,BodyLeftToDown
-    private final String[] imagePathsSnake = {"src/resources/HU.png", "src/resources/HD.png", "src/resources/HL.png", "src/resources/HR.png", //Head
-                                         "src/resources/TU.png","src/resources/TD.png","src/resources/TL.png","src/resources/TR.png",    //Tail
-                                         "src/resources/RR.png","src/resources/UU.png",                                                  //Strait body
-                                         "src/resources/LU.png","src/resources/LD.png","src/resources/RU.png","src/resources/RD.png",};  //Curve body
-    private final String[] imagePathsBG = {"src/resources/BG-0.png", "src/resources/BG-1.png", "src/resources/BG-H.png", "src/resources/BG-V.png",
-                                           "src/resources/BG-LU.png", "src/resources/BG-LD.png", "src/resources/BG-RU.png", "src/resources/BG-RD.png"};
+    private final String[] imagePathsSnake = {"resources/HU.png", "resources/HD.png", "resources/HL.png", "resources/HR.png", //Head
+            "resources/TU.png", "resources/TD.png", "resources/TL.png", "resources/TR.png",    //Tail
+            "resources/RR.png", "resources/UU.png",                                                  //Strait body
+            "resources/LU.png", "resources/LD.png", "resources/RU.png", "resources/RD.png",};  //Curve body
+    private final String[] imagePathsBG = {"resources/BG-0.png", "resources/BG-1.png", "resources/BG-H.png", "resources/BG-V.png",
+            "resources/BG-LU.png", "resources/BG-LD.png", "resources/BG-RU.png", "resources/BG-RD.png"};
 
     private Font t_font;
     private FontMetrics metr;
@@ -118,14 +118,15 @@ public class SnakeBoard extends JPanel implements ActionListener {
         body = new Image[6];
         background = new Image[8];
 
+        ClassLoader cl = this.getClass().getClassLoader();
         int i = 0;
-        while(i < 4) head[i] = new ImageIcon(imagePathsSnake[i++]).getImage();
-        while(i < 8) tail[i - 4] = new ImageIcon(imagePathsSnake[i++]).getImage();
-        while(i < 14) body[i - 8] = new ImageIcon(imagePathsSnake[i++]).getImage();
+        while(i < 4) head[i] = new ImageIcon(cl.getResource(imagePathsSnake[i++])).getImage();
+        while(i < 8) tail[i - 4] = new ImageIcon(cl.getResource(imagePathsSnake[i++])).getImage();
+        while(i < 14) body[i - 8] = new ImageIcon(cl.getResource(imagePathsSnake[i++])).getImage();
         i = 0;
-        for(String patch : imagePathsBG) background[i++] = new ImageIcon(patch).getImage();
+        for(String path : imagePathsBG) background[i++] = new ImageIcon(cl.getResource(path)).getImage();
 
-        apple = new ImageIcon("src/resources/apple.png").getImage();
+        apple = new ImageIcon(cl.getResource("resources/apple.png")).getImage();
     }
 
     private void initGame() {

@@ -4,20 +4,28 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
+import java.util.prefs.Preferences;
 
 public class MainMenu extends JFrame{
-    private static int snakeHighScore = 0, sapperHighScore = 0;
-    private static String scoreFilePath = "src/resources/score.txt";
+    private int snakeHighScore = 0, sapperHighScore = 0;
+    // Key values for retrieving
+    private final String snakeHighScoreKey = "snake", sapperHighScoreKey = "sapper";
 
-    JTextField textFieldWidth = new JTextField("11");
-    JTextField textFieldHeight = new JTextField("11");
-    JTextField textFieldMinesCount = new JTextField("20");
+    private JTextField textFieldWidth = new JTextField("11");
+    private JTextField textFieldHeight = new JTextField("11");
+    private JTextField textFieldMinesCount = new JTextField("20");
 
+    /**
+     * MainMenu class constructor, loads high scores for snake and sapper and initialize main menu UI
+     */
+    public MainMenu(){
+        loadHighScore();
+        initUI();
+    }
+
+    /**
+     *Initialize UI of main menu with 3 parameters to customize game, and 2 buttons to run games.
+     */
     private void initUI() {
         JLabel lblWidth =       new JLabel("Board width: ");
         JLabel lblHeight =      new JLabel("Board height:");
@@ -30,7 +38,8 @@ public class MainMenu extends JFrame{
         layout.setAutoCreateGaps(true);
         layout.setAutoCreateContainerGaps(true);
 
-      layout.setHorizontalGroup(layout.createParallelGroup()
+        //Set up horizontal groups in layout
+        layout.setHorizontalGroup(layout.createParallelGroup()
                 .addGroup(layout.createSequentialGroup()
                     .addComponent(lblWidth)
                     .addComponent(textFieldWidth))
@@ -48,6 +57,7 @@ public class MainMenu extends JFrame{
 
         layout.linkSize(SwingConstants.HORIZONTAL, btnPlaySnake, btnPlaySapper);
 
+        //Set up vertical Groups in layout
         layout.setVerticalGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup()
                         .addComponent(lblWidth)
@@ -63,14 +73,13 @@ public class MainMenu extends JFrame{
                         .addComponent(btnPlaySapper))
         );
 
+        //Button action listeners to run games
         btnPlaySnake.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 RunSnake();
             }
         });
-        
-
         btnPlaySapper.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -88,39 +97,32 @@ public class MainMenu extends JFrame{
 
     }
 
-    private static void loadHighScore(){
-        File file = new File(scoreFilePath);
-        try {
-            if(file.createNewFile()) {
-                FileWriter writer = new FileWriter(file);
-                writer.write("0 0");
-                writer.close();
-            }
-            else {
-                Scanner sc = new Scanner(file);
-                snakeHighScore = sc.nextInt();
-                sapperHighScore = sc.nextInt();
-            }
-        }
-        catch (NoSuchElementException e){
-            System.out.println("high score file error: wrong format");
+    /**
+    *Loads high scores values from preferences located in registry.
+    *  Snakes to snakeHighScore with snakeHighScoreKey,
+     *  and Sappers to sappersHighScore with sapperHighScoreKey
+    */
+    private void loadHighScore(){
+        Preferences highScore = Preferences.userNodeForPackage(MainMenu.class);
+        snakeHighScore = highScore.getInt(snakeHighScoreKey,0);
+        sapperHighScore = highScore.getInt(sapperHighScoreKey,0);
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    }
+    /**
+     *Saves high scores values to preferences located in registry.
+     *  snakeHighScore with snakeHighScoreKey as Snakes value,
+     *  and sappersHighScore with sapperHighScoreKey as Sappers value
+     */
+    private void SaveHighScore() {
+        Preferences highScore = Preferences.userNodeForPackage(MainMenu.class);
+        highScore.putInt(snakeHighScoreKey,snakeHighScore);
+        highScore.getInt(sapperHighScoreKey,sapperHighScore);
     }
 
-    private static void SaveHighScore() {
-        File file = new File(scoreFilePath);
-        try {
-            FileWriter writer = new FileWriter(file);
-            writer.write(String.format("%d %d", snakeHighScore, sapperHighScore));
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
+    /**
+     * Run Snake Game with parameters specified in main menu UI by the user
+     * Adds listener to save high score when game is closed
+     */
     private void RunSnake(){
         Snake snake = new Snake(snakeHighScore,Integer.parseInt(textFieldWidth.getText()), Integer.parseInt(textFieldHeight.getText()));
         EventQueue.invokeLater(() -> {
@@ -166,7 +168,10 @@ public class MainMenu extends JFrame{
             });
         });
     }
-
+    /**
+     * Run Sapper Game with parameters specified in main menu UI by the user
+     * Adds listener to save high score when game is closed
+     */
     private void RunSapper(){
         Sapper sapper = new Sapper(sapperHighScore,Integer.parseInt(textFieldWidth.getText()),
                 Integer.parseInt(textFieldHeight.getText()),Integer.parseInt(textFieldMinesCount.getText()));
@@ -214,11 +219,13 @@ public class MainMenu extends JFrame{
         });
     }
 
+    /**
+     * Main entry of program,
+     * Creates MainMenu instance
+     * @param args none values are accepted
+     */
     public static void main(String[] args) {
-        loadHighScore();
-        //RunSnake();
         MainMenu menu = new MainMenu();
-        menu.initUI();
         EventQueue.invokeLater(() -> {
             JFrame ex = menu;
             ex.setVisible(true);
