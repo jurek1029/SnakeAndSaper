@@ -1,9 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.event.*;
 import java.util.prefs.Preferences;
 
 public class MainMenu extends JFrame{
@@ -108,6 +105,7 @@ public class MainMenu extends JFrame{
         sapperHighScore = highScore.getInt(sapperHighScoreKey,0);
 
     }
+
     /**
      *Saves high scores values to preferences located in registry.
      *  snakeHighScore with snakeHighScoreKey as Snakes value,
@@ -116,7 +114,7 @@ public class MainMenu extends JFrame{
     private void SaveHighScore() {
         Preferences highScore = Preferences.userNodeForPackage(MainMenu.class);
         highScore.putInt(snakeHighScoreKey,snakeHighScore);
-        highScore.getInt(sapperHighScoreKey,sapperHighScore);
+        highScore.putInt(sapperHighScoreKey,sapperHighScore);
     }
 
     /**
@@ -124,111 +122,48 @@ public class MainMenu extends JFrame{
      * Adds listener to save high score when game is closed
      */
     private void RunSnake(){
-        Snake snake = new Snake(snakeHighScore,Integer.parseInt(textFieldWidth.getText()), Integer.parseInt(textFieldHeight.getText()));
-        EventQueue.invokeLater(() -> {
-            JFrame ex = snake;
-            ex.setVisible(true);
-            ex.addWindowListener(new WindowListener() {
+        //Create snake board with UI specified parameters
+        SnakeBoard snakeBoard = new SnakeBoard(snakeHighScore,Integer.parseInt(textFieldWidth.getText()),
+                Integer.parseInt(textFieldHeight.getText()),Integer.parseInt(textFieldMinesCount.getText()));
+        Game snake = new Game("Snake",snakeBoard);
 
-                @Override
-                public void windowOpened(WindowEvent e) {
-
-                }
-
-                @Override
-                public void windowClosing(WindowEvent e) {
-                    snakeHighScore = snake.getBoard().getHighScore();
-                    SaveHighScore();
-                }
-
-                @Override
-                public void windowClosed(WindowEvent e) {
-
-                }
-
-                @Override
-                public void windowIconified(WindowEvent e) {
-
-                }
-
-                @Override
-                public void windowDeiconified(WindowEvent e) {
-
-                }
-
-                @Override
-                public void windowActivated(WindowEvent e) {
-
-                }
-
-                @Override
-                public void windowDeactivated(WindowEvent e) {
-
-                }
-            });
+        // Add on Window closing listener that saves current snake high score
+        snake.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                snakeHighScore = snake.getBoard().getHighScore();
+                SaveHighScore();
+            }
         });
     }
+
     /**
      * Run Sapper Game with parameters specified in main menu UI by the user
      * Adds listener to save high score when game is closed
      */
     private void RunSapper(){
-        Sapper sapper = new Sapper(sapperHighScore,Integer.parseInt(textFieldWidth.getText()),
-                Integer.parseInt(textFieldHeight.getText()),Integer.parseInt(textFieldMinesCount.getText()));
-        EventQueue.invokeLater(() -> {
-            JFrame ex = sapper;
-            ex.setVisible(true);
-            ex.addWindowListener(new WindowListener() {
+        SapperBoard sapperBoard = new SapperBoard(sapperHighScore,Integer.parseInt(textFieldWidth.getText()),
+                        Integer.parseInt(textFieldHeight.getText()),Integer.parseInt(textFieldMinesCount.getText()));
+        Game sapper = new Game("Sapper",sapperBoard);
 
-                @Override
-                public void windowOpened(WindowEvent e) {
-
-                }
-
-                @Override
-                public void windowClosing(WindowEvent e) {
-                    sapperHighScore = sapper.getBoard().getHighScore();
-                    SaveHighScore();
-                }
-
-                @Override
-                public void windowClosed(WindowEvent e) {
-
-                }
-
-                @Override
-                public void windowIconified(WindowEvent e) {
-
-                }
-
-                @Override
-                public void windowDeiconified(WindowEvent e) {
-
-                }
-
-                @Override
-                public void windowActivated(WindowEvent e) {
-
-                }
-
-                @Override
-                public void windowDeactivated(WindowEvent e) {
-
-                }
-            });
+        // Add on Window closing listener that saves current sapper high score
+        sapper.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                sapperHighScore = sapper.getBoard().getHighScore();
+                SaveHighScore();
+            }
         });
     }
 
+
     /**
      * Main entry of program,
-     * Creates MainMenu instance
+     * Creates MainMenu instance and run it in the main thread
      * @param args none values are accepted
      */
     public static void main(String[] args) {
         MainMenu menu = new MainMenu();
-        EventQueue.invokeLater(() -> {
-            JFrame ex = menu;
-            ex.setVisible(true);
-        });
+        menu.setVisible(true);
     }
 }

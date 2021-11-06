@@ -6,11 +6,9 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import javax.swing.ImageIcon;
-import javax.swing.JPanel;
 import javax.swing.Timer;
 
 enum Directions {
@@ -28,22 +26,12 @@ enum SnakeBGimgIndex {
     public int getValue(){return value;}
 }
 
-public class SnakeBoard extends JPanel implements ActionListener {
-
-    private final int DOT_SIZE = 64; //size of one tile
-    private final int TOP_BEVEL_HEIGHT = 50; //size of top bevel displaying score
-
-    private final int DELAY = 300; //time delay in milliseconds for every snake move/ game update
-
-    private final int T_NUM_X; //number of tiles in x direction
-    private final int T_NUM_Y; //number of tiles in y direction
-    private final int W_WIDTH; //window width in pixels
-    private final int W_HEIGHT; //window height in pixels
+public class SnakeBoard extends Board {
 
     // array of snake's body positions where first element is head,
     // this will never be a very big array in FullHD monitor there will be only 30x16 ints allocated
-    private final int[] snakeX;
-    private final int[] snakeY;
+    private int[] snakeX;
+    private int[] snakeY;
 
     private int snakeLength;
     private int apple_x, apple_y;
@@ -51,10 +39,7 @@ public class SnakeBoard extends JPanel implements ActionListener {
     private int vx = 1,vy = 0; //velocities in x and y directions
     private Directions direction = Directions.Right; // current moving direction
     private Directions nextDirection = Directions.Right; // direction after next game update
-
     private boolean inGame = true;
-    private Timer timer;
-    private int highScore;
 
     // indexes of images are adequate to directions:
     // 0:up , 1:down, 2:left, 3:right
@@ -74,45 +59,40 @@ public class SnakeBoard extends JPanel implements ActionListener {
 
     // need paths to be in order of: HeadUp,HeadDown,HeadLeft,HeadRight,TailUp,TailDown,TailLeft,TailRight,
     //                               BodyVertical,BodyHorizontal,BodyLeftToUp,BodyLeftToDown,BodyRightToUp,BodyLeftToDown
-    private final String[] imagePathsSnake = {"resources/HU.png", "resources/HD.png", "resources/HL.png", "resources/HR.png", //Head
+    private static final String[] imagePathsSnake = {"resources/HU.png", "resources/HD.png", "resources/HL.png", "resources/HR.png", //Head
             "resources/TU.png", "resources/TD.png", "resources/TL.png", "resources/TR.png",    //Tail
             "resources/RR.png", "resources/UU.png",                                                  //Strait body
             "resources/LU.png", "resources/LD.png", "resources/RU.png", "resources/RD.png",};  //Curve body
-    private final String[] imagePathsBG = {"resources/BG-0.png", "resources/BG-1.png", "resources/BG-H.png", "resources/BG-V.png",
+    private static final String[] imagePathsBG = {"resources/BG-0.png", "resources/BG-1.png", "resources/BG-H.png", "resources/BG-V.png",
             "resources/BG-LU.png", "resources/BG-LD.png", "resources/BG-RU.png", "resources/BG-RD.png"};
 
-    private Font t_font;
-    private FontMetrics metr;
 
 
-    public SnakeBoard(int _highScore, int boardWidth, int boardHeight) {
-        highScore = _highScore;
-        T_NUM_X = boardWidth;
-        T_NUM_Y = boardHeight;
+    public SnakeBoard(int _highScore, int boardWidth, int boardHeight, int mineCount) {
+        super(_highScore, boardWidth, boardHeight, mineCount);
+    }
+
+    @Override
+    protected void SetWindowSize() {
+        DOT_SIZE = 64; //size of one tile
+        TOP_BEVEL_HEIGHT = 50; //size of top bevel displaying score
         W_WIDTH = DOT_SIZE * (T_NUM_X + 2);
         W_HEIGHT =  DOT_SIZE * (T_NUM_Y + 2) + TOP_BEVEL_HEIGHT;
+    }
+
+    @Override
+    protected void customBoardInit() {
+        DELAY = 300; //time delay in milliseconds for every snake move/ game update
 
         int ALL_DOTS = T_NUM_X * T_NUM_Y;
         snakeX = new int[ALL_DOTS];
         snakeY = new int[ALL_DOTS];
 
-        initBoard();
-    }
-
-    private void initBoard() {
         addKeyListener(new TAdapter());
-        setBackground(new Color(100, 144, 67));
-        setFocusable(true);
-        setPreferredSize(new Dimension(W_WIDTH, W_HEIGHT));
-
-        t_font = new Font("Helvetica", Font.BOLD, 28);
-        metr = getFontMetrics(t_font);
-        loadImages();
-        initGame();
     }
 
-
-    private void loadImages() {
+    @Override
+    protected void loadImages() {
         head = new Image[4];
         tail = new Image[4];
         body = new Image[6];
@@ -129,7 +109,8 @@ public class SnakeBoard extends JPanel implements ActionListener {
         apple = new ImageIcon(cl.getResource("resources/apple.png")).getImage();
     }
 
-    private void initGame() {
+    @Override
+    protected void initGame() {
         snakeLength = 3;
         int XScreenCenter = (T_NUM_X - 1) / 2;
         int YScreenCenter = (T_NUM_Y - 1) / 2;
@@ -140,16 +121,6 @@ public class SnakeBoard extends JPanel implements ActionListener {
         }
 
         locateApple();
-
-        timer = new Timer(DELAY, this);
-        timer.start();
-    }
-
-    @Override
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-
-        doDrawing(g);
     }
 
     private int GetBodyPartTypeIndex(int current){
@@ -167,9 +138,7 @@ public class SnakeBoard extends JPanel implements ActionListener {
         }
         return mapDirectionToImageIndex[value];
     }
-    private int getBackgroundOffset(){
-        return TOP_BEVEL_HEIGHT;
-    }
+
     private void DrawBackground(Graphics g){
         //Corners
         g.drawImage(background[SnakeBGimgIndex.LeftUpCorner.getValue()],0, getBackgroundOffset(),this);
@@ -211,14 +180,8 @@ public class SnakeBoard extends JPanel implements ActionListener {
         g.drawString(s_highscore, W_WIDTH  - (metr.stringWidth(s_highscore)) - DOT_SIZE/2, (DOT_SIZE)/ 2);
 
     }
-    private int CalcWinX(int x){
-        return (x + 1) * DOT_SIZE;
-    }
-    private int CalcWinY(int y){
-        return (y + 1) * DOT_SIZE + getBackgroundOffset();
-    }
-
-    private void doDrawing(Graphics g) {
+    @Override
+    protected void doDrawing(Graphics g) {
         DrawBackground(g);
 
         if (inGame) {
@@ -330,10 +293,6 @@ public class SnakeBoard extends JPanel implements ActionListener {
                 nextDirection = Directions.Down;
             }
         }
-    }
-
-    public int getHighScore() {
-        return highScore;
     }
 }
 

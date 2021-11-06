@@ -1,7 +1,4 @@
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Toolkit;
@@ -17,79 +14,71 @@ enum SapperTiles {
     public int getValue(){return value;}
 }
 
-public class SapperBoard extends JPanel implements ActionListener {
+public class SapperBoard extends Board {
 
-    private final int DOT_SIZE = 67; //size of one tile
-    private final int TOP_BEVEL_HEIGHT = 15; //size of top bevel displaying score
-
-    private final int T_NUM_X; //number of tiles in x direction
-    private final int T_NUM_Y; //number of tiles in y direction
-    private final int W_WIDTH; //window width in pixels
-    private final int W_HEIGHT; //window height in pixels
-    private final int DELAY = 1000;
-
-    private int minesCount;
-    private final boolean[][] mines;
-    private final SapperTiles[][] board;
-    private final int minesCountAround[][];
+    private boolean[][] mines;
+    private SapperTiles[][] board;
+    private int minesCountAround[][];
 
     private boolean inGame = true;
     private boolean win = false;
-    private int highScore;
     private int lives = 2;
     private long start, finish;
-    private Timer timer;
 
     private Image[] tiles;
 
-    private final String[] imagePathsBG = {"resources/TEmpty.png", "resources/TCovered.png", "resources/TFlag.png",
+    private static final String[] imagePathsBG = {"resources/TEmpty.png", "resources/TCovered.png", "resources/TFlag.png",
             "resources/mine.png", "resources/mineExplode.png"};
 
-    private final Color[] numberColors = {new Color(5, 6, 247),new Color(0, 134, 11),new Color(250, 0, 2),
+    private static final Color[] numberColors = {new Color(5, 6, 247),new Color(0, 134, 11),new Color(250, 0, 2),
                                             new Color(4, 5, 111), new Color(123, 4, 8),new Color(23, 101, 88),
                                             new Color(0, 3, 0),new Color(127, 127, 127)};
-    private Font t_font;
-    private FontMetrics metr;
 
 
     public SapperBoard(int _highScore, int boardWidth, int boardHeight, int _mineCount) {
-        highScore = _highScore;
-        T_NUM_X = boardWidth;
-        T_NUM_Y = boardHeight;
+        super(_highScore,boardWidth,boardHeight,_mineCount);
+    }
+
+    @Override
+    protected void SetWindowSize() {
+        DOT_SIZE = 67;
+        TOP_BEVEL_HEIGHT = 15;
         W_WIDTH = DOT_SIZE * (T_NUM_X + 2);
         W_HEIGHT =  DOT_SIZE * (T_NUM_Y + 2) + TOP_BEVEL_HEIGHT;
-        minesCount = _mineCount;
+    }
+
+    @Override
+    protected void customBoardInit() {
+        DELAY = 1000;
+
         mines = new boolean[T_NUM_X][T_NUM_Y];
         board = new SapperTiles[T_NUM_X][T_NUM_Y];
         minesCountAround = new int[T_NUM_X][T_NUM_Y];
 
-        initBoard();
-    }
-
-    private void initBoard() {
-        addMouseListener(new MAdapter());
-        setBackground(new Color(100, 144, 67));
-        setFocusable(true);
-        setPreferredSize(new Dimension(W_WIDTH, W_HEIGHT));
-
-        t_font = new Font("Helvetica", Font.BOLD, 28);
-        metr = getFontMetrics(t_font);
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e){
+                repaint();
+                int mouseBtn = e.getButton();
+                if(mouseBtn == MouseEvent.BUTTON1){
+                    checkTile(CalcTileX(e.getX()), CalcTileY(e.getY()));
+                }
+                else if(mouseBtn == MouseEvent.BUTTON3){
+                    placeFlag(CalcTileX(e.getX()), CalcTileY(e.getY()));
+                }
+                if(inGame) CheckIfFinished();
+            }
+        });
 
         for(int x = 0; x < T_NUM_X; x ++){
             for(int y = 0; y < T_NUM_Y; y ++){
                 board[x][y] = SapperTiles.Covered;
             }
         }
-
-        loadImages();
-        initGame();
-
-        timer = new Timer(DELAY, this);
-        timer.start();
     }
 
-
-    private void loadImages() {
+    @Override
+    protected void loadImages() {
         tiles = new Image[5];
 
         int i = 0;
@@ -97,7 +86,8 @@ public class SapperBoard extends JPanel implements ActionListener {
         for(String path : imagePathsBG) tiles[i++] = new ImageIcon(cl.getResource(path)).getImage();
     }
 
-    private void initGame() {
+    @Override
+    protected void initGame() {
         generateMines();
         //Precalculate mines around every tile;
         for(int x = 0; x < T_NUM_X; x ++){
@@ -113,25 +103,14 @@ public class SapperBoard extends JPanel implements ActionListener {
         start = System.currentTimeMillis();
     }
 
-    @Override
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-
-        doDrawing(g);
-    }
-
-    private int getBackgroundOffset(){
-        return TOP_BEVEL_HEIGHT;
-    }
-
     private String milisecToStrnig(long mili){
-        return String.format("%d:%d",mili/60000,(mili % 60000) /1000);
+        return String.format("%d:%02d",mili/60000,(mili % 60000) /1000);
     }
     private String milisecToStrnigPrecise(long mili){
         long min = mili/60000;
         long s = (mili % 60000) /1000;
         long ms = (mili % 1000);
-        return String.format("%d:%d.%d",min,s,ms);
+        return String.format("%d:%02d.%03d",min,s,ms);
     }
 
     private void DrawMenu(Graphics g){
@@ -148,18 +127,9 @@ public class SapperBoard extends JPanel implements ActionListener {
         g.drawString(s_time, W_WIDTH  - (metr.stringWidth(s_time)) - DOT_SIZE/2, (DOT_SIZE));
 
     }
-    private int CalcWinX(int x){
-        return (x + 1) * DOT_SIZE;
-    }
-    private int CalcWinY(int y){
-        return (y + 1) * DOT_SIZE + getBackgroundOffset();
-    }
-    private int CalcTileX(int x){
-        return x / DOT_SIZE - 1;
-    }
-    private int CalcTileY(int y){ return (y - getBackgroundOffset()) / DOT_SIZE - 1 ;}
 
-    private void doDrawing(Graphics g) {
+    @Override
+    protected void doDrawing(Graphics g) {
         if (inGame) {
             DrawMenu(g);
             for(int x = 0; x < T_NUM_X; x ++){
@@ -182,15 +152,13 @@ public class SapperBoard extends JPanel implements ActionListener {
     }
 
     private void gameOver(Graphics g) {
-        if(highScore != 0)
-            highScore = Math.min((int)(finish - start), highScore);
-        else
-            highScore = (int)(finish - start);
-
         String msg;
         if(win) {
+            if(highScore != 0)
+                highScore = Math.min((int)(finish - start), highScore);
+            else
+                highScore = (int)(finish - start);
             msg = "You Win, Time: " + milisecToStrnigPrecise(finish - start);
-
         }
         else{
             msg = "Game Over";
@@ -268,7 +236,6 @@ public class SapperBoard extends JPanel implements ActionListener {
     }
 
     private void CheckIfFinished(){
-
         for(int x = 0; x < T_NUM_X; x++){
             for(int y = 0; y < T_NUM_Y; y++){
                 if(board[x][y] == SapperTiles.Covered) {
@@ -276,7 +243,6 @@ public class SapperBoard extends JPanel implements ActionListener {
                 }
             }
         }
-
         if(minesCount == 0) win = true;
         inGame = false;
         finish = System.currentTimeMillis();
@@ -287,25 +253,6 @@ public class SapperBoard extends JPanel implements ActionListener {
         repaint();
     }
 
-
-    private class MAdapter extends MouseAdapter {
-        @Override
-        public void mouseClicked(MouseEvent e){
-            repaint();
-            int mouseBtn = e.getButton();
-            if(mouseBtn == MouseEvent.BUTTON1){
-                checkTile(CalcTileX(e.getX()), CalcTileY(e.getY()));
-            }
-            else if(mouseBtn == MouseEvent.BUTTON3){
-                placeFlag(CalcTileX(e.getX()), CalcTileY(e.getY()));
-            }
-            CheckIfFinished();
-        }
-    }
-
-    public int getHighScore() {
-        return highScore;
-    }
 }
 
 
