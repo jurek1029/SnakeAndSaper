@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="SnakeAndSaperProd:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/SnakeAndSaperProd_jar</output-path>
+    <root id="archive" name="SnakeAndSaper.jar">
+      <element id="module-output" name="SnakeAndSaper" />
+      <element id="directory" name="resources">
+        <element id="dir-copy" path="$PROJECT_DIR$/src/resources" />
+      </element>
+    </root>
+  </artifact>
+</component>
