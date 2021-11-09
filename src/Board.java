@@ -84,7 +84,7 @@ abstract public class Board extends JPanel implements ActionListener {
 
     /**
      * function that will be called every time something needs to be redrawn
-     * @param g grapic context to draw elements
+     * @param g graphic context to draw elements
      */
     protected abstract void doDrawing(Graphics g);
 

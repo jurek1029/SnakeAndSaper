@@ -124,7 +124,7 @@ public class MainMenu extends JFrame{
     private void RunSnake(){
         //Create snake board with UI specified parameters
         SnakeBoard snakeBoard = new SnakeBoard(snakeHighScore,Integer.parseInt(textFieldWidth.getText()),
-                Integer.parseInt(textFieldHeight.getText()),Integer.parseInt(textFieldMinesCount.getText()));
+                Integer.parseInt(textFieldHeight.getText()));
         Game snake = new Game("Snake",snakeBoard);
 
         // Add on Window closing listener that saves current snake high score
